@@ -62,6 +62,19 @@ namespace saitynai_backend.Controllers
             return Ok(groups);
         }
 
+        [HttpDelete("{Id}")]
+        public async Task<IActionResult> DeleteFaculty(int Id)
+        {
+            var Faculty = await _context.Faculties.FindAsync(Id);
+            if (Faculty == null)
+            {
+                return NotFound("No faculty found.");
+            }
+            _context.Faculties.Remove(Faculty);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
         [HttpPost]
         public async Task<ActionResult<Faculty>> CreateFaculty([FromBody] CreateFacultyDTO FacultyDto)
         {

@@ -1,4 +1,5 @@
 ﻿using saitynai_backend.Entities;
+using System.Drawing;
 
 namespace saitynai_backend.DataTransferObject
 {
@@ -10,6 +11,8 @@ namespace saitynai_backend.DataTransferObject
         public string PhoneNumber { get; set; }
         public int FacultyId { get; set; }
         public string StudyProgram { get; set; }
+        public int StudyYear { get; set; }
+        public StudyLevel StudyLevel { get; set; }
     }
 
     public class UpdateMentorDTO
@@ -20,5 +23,7 @@ namespace saitynai_backend.DataTransferObject
         public string PhoneNumber { get; set; }
         public int FacultyId { get; set; }
         public string StudyProgram { get; set; }
+        public int StudyYear { get; set; } 
+        public StudyLevel StudyLevel { get; set; }  
     }
 }

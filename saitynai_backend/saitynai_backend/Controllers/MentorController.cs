@@ -76,7 +76,9 @@ namespace saitynai_backend.Controllers
                 Email = MentorDto.Email,
                 PhoneNumber = MentorDto.PhoneNumber,
                 FacultyId = MentorDto.FacultyId,
-                StudyProgram = MentorDto.StudyProgram
+                StudyProgram = MentorDto.StudyProgram,
+                StudyYear = MentorDto.StudyYear,
+                StudyLevel = MentorDto.StudyLevel
             };
 
             _context.Mentors.Add(mentor);
