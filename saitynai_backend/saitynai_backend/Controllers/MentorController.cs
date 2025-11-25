@@ -28,7 +28,21 @@ namespace saitynai_backend.Controllers
             {
                 return NotFound("No mentors found.");
             }
-            return Ok(MentorsList);
+            var dto = MentorsList
+                .Select(Mentor => new ResponseMentorDTO
+                {
+                    Id = Mentor.Id,
+                    Name = Mentor.Name,
+                    Surname = Mentor.Surname,
+                    Email = Mentor.Email,
+                    PhoneNumber = Mentor.PhoneNumber,
+                    FacultyId = Mentor.FacultyId,
+                    StudyProgram = Mentor.StudyProgram,
+                    StudyYear = Mentor.StudyYear,
+                    StudyLevel = Mentor.StudyLevel
+                })
+                .ToList();
+            return Ok(dto);
         }
 
         [HttpGet("{Id}")]
@@ -39,7 +53,19 @@ namespace saitynai_backend.Controllers
             {
                 return NotFound("No mentor found.");
             }
-            return Ok(Mentor);
+            ResponseMentorDTO dto = new ResponseMentorDTO
+            {
+                Id = Mentor.Id,
+                Name = Mentor.Name,
+                Surname = Mentor.Surname,
+                Email = Mentor.Email,
+                PhoneNumber = Mentor.PhoneNumber,
+                FacultyId = Mentor.FacultyId,
+                StudyProgram = Mentor.StudyProgram,
+                StudyYear = Mentor.StudyYear,
+                StudyLevel = Mentor.StudyLevel
+            };
+            return Ok(dto);
         }
 
         [HttpDelete("{Id}")]
@@ -79,12 +105,26 @@ namespace saitynai_backend.Controllers
                 StudyProgram = MentorDto.StudyProgram,
                 StudyYear = MentorDto.StudyYear,
                 StudyLevel = MentorDto.StudyLevel
+
             };
 
             _context.Mentors.Add(mentor);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMentor), new { id = mentor }, mentor);
+            ResponseMentorDTO dto = new ResponseMentorDTO
+            {
+                Id = mentor.Id,
+                Name = mentor.Name,
+                Surname = mentor.Surname,
+                Email = mentor.Email,
+                PhoneNumber = mentor.PhoneNumber,
+                FacultyId = mentor.FacultyId,
+                StudyProgram = mentor.StudyProgram,
+                StudyYear = mentor.StudyYear,
+                StudyLevel = mentor.StudyLevel
+            };
+
+            return CreatedAtAction(nameof(GetMentor), new { id = mentor }, dto);
         }
 
         [HttpPut("{Id}")]
@@ -118,6 +158,9 @@ namespace saitynai_backend.Controllers
             mentor.Email = dto.Email;
             mentor.PhoneNumber = dto.PhoneNumber;
             mentor.FacultyId = dto.FacultyId;
+            mentor.StudyProgram = dto.StudyProgram;
+            mentor.StudyYear = dto.StudyYear;
+            mentor.StudyLevel = dto.StudyLevel;
 
             _context.Mentors.Update(mentor);
             await _context.SaveChangesAsync();

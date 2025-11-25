@@ -26,7 +26,15 @@ namespace saitynai_backend.Controllers
             {
                 return NotFound("No faculties found.");
             }
-            return Ok(FacultyList);
+            var dto = FacultyList
+                .Select(Faculty => new ResponseFacultyDTO
+                {
+                    Id = Faculty.Id,
+                    Name = Faculty.Name,
+                    Address = Faculty.Address
+                })
+                .ToList();
+            return Ok(dto);
         }
 
         [HttpGet("{Id}")]
@@ -37,7 +45,13 @@ namespace saitynai_backend.Controllers
             {
                 return NotFound("No faculty found.");
             }
-            return Ok(Faculty);
+            ResponseFacultyDTO dto = new ResponseFacultyDTO
+            {
+                Id = Faculty.Id,
+                Name = Faculty.Name,
+                Address = Faculty.Address
+            };
+            return Ok(dto);
         }
 
         //konkreciu fakulteto mentoriu grupes perziura
@@ -59,7 +73,19 @@ namespace saitynai_backend.Controllers
             {
                 return NotFound($"No groups found for community ID {FacultyId}.");
             }
-            return Ok(groups);
+
+            var dto = groups
+                .Select(group => new ResponseGroupDTO
+                {
+                    Id = group.Id,
+                    Name = group.Name,
+                    StudyLevel = group.StudyLevel,
+                    StudyYear = group.StudyYear,
+                    MentorId = group.MentorId
+                })
+                .ToList();
+
+            return Ok(dto);
         }
 
         [HttpDelete("{Id}")]
@@ -96,8 +122,14 @@ namespace saitynai_backend.Controllers
             _context.Faculties.Add(faculty);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetFaculty), new { id = faculty }, faculty
-                );
+            ResponseFacultyDTO dto = new ResponseFacultyDTO
+            {
+                Id = faculty.Id,
+                Name = faculty.Name,
+                Address = faculty.Address
+            };
+
+            return CreatedAtAction(nameof(GetFaculty), new { id = faculty }, dto);
         }
 
         [HttpPut("{Id}")]

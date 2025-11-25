@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
+using System.Text.RegularExpressions;
 
 namespace saitynai_backend.Controllers
 {
@@ -19,25 +20,43 @@ namespace saitynai_backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Group>>> GetGroups()
+        public async Task<ActionResult<IEnumerable<Entities.Group>>> GetGroups()
         {
             var GroupList = await _context.Groups.ToListAsync();
             if (GroupList == null || GroupList.Count == 0)
             {
                 return NotFound("No groups found.");
             }
-            return Ok(GroupList);
+            var dto = GroupList
+                .Select(Group => new ResponseGroupDTO
+                {
+                    Id = Group.Id,
+                    Name = Group.Name,
+                    StudyLevel = Group.StudyLevel,
+                    StudyYear = Group.StudyYear,
+                    MentorId = Group.MentorId
+                })
+                .ToList();
+            return Ok(dto);
         }
 
         [HttpGet("{Id}")]
-        public async Task<ActionResult<Group>> GetGroup(int Id)
+        public async Task<ActionResult<Entities.Group>> GetGroup(int Id)
         {
             var Group = await _context.Groups.FindAsync(Id);
             if (Group == null)
             {
                 return NotFound("No group found.");
             }
-            return Ok(Group);
+            ResponseGroupDTO dto = new ResponseGroupDTO
+            {
+                Id = Group.Id,
+                Name = Group.Name,
+                StudyLevel = Group.StudyLevel,
+                StudyYear = Group.StudyYear,
+                MentorId = Group.MentorId
+            };
+            return Ok(dto);
         }
 
         [HttpDelete("{Id}")]
@@ -54,7 +73,7 @@ namespace saitynai_backend.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Group>> CreateFaculty([FromBody] CreateGroupDTO GroupDto)
+        public async Task<ActionResult<Entities.Group>> CreateFaculty([FromBody] CreateGroupDTO GroupDto)
         {
             if (GroupDto == null || string.IsNullOrWhiteSpace(GroupDto.Name) || GroupDto.StudyYear <= 0 || GroupDto.MentorId <= 0)
             {
@@ -65,17 +84,27 @@ namespace saitynai_backend.Controllers
                 return UnprocessableEntity("Invalid group data.");
             }
 
-            Group group = new Group
+            Entities.Group group = new Entities.Group
             {
                 Name = GroupDto.Name,
                 StudyYear = GroupDto.StudyYear,
+                StudyLevel = GroupDto.StudyLevel,
                 MentorId = GroupDto.MentorId
             };
 
             _context.Groups.Add(group);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGroup), new { id = group }, group);
+            ResponseGroupDTO dto = new ResponseGroupDTO
+            {
+                Id = group.Id,
+                Name = group.Name,
+                StudyLevel = group.StudyLevel,
+                StudyYear = group.StudyYear,
+                MentorId = group.MentorId
+            };
+
+            return CreatedAtAction(nameof(GetGroup), new { id = group }, dto);
         }
 
         [HttpPut("{Id}")]
@@ -104,6 +133,7 @@ namespace saitynai_backend.Controllers
 
             group.Name = dto.Name;
             group.StudyYear = dto.StudyYear;
+            group.StudyLevel = dto.StudyLevel;
             group.MentorId = dto.MentorId;
 
             _context.Groups.Update(group);
