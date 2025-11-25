@@ -16,6 +16,9 @@ namespace saitynai_backend.Entities
         public StudyLevel StudyLevel { get; set; }
         public string StudyProgram { get; set; }
         public int StudyYear { get; set; }
+        [Required]
+        public required string UserId { get; set; }
+        public User User { get; set; }
 
         public ICollection<Group> Groups { get; set; } = new List<Group>();
 

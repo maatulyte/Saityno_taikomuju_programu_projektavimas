@@ -5,6 +5,7 @@ using Microsoft.Extensions.Hosting;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
 using System.Text.RegularExpressions;
+using System.Security.Claims;
 
 namespace saitynai_backend.Controllers
 {
@@ -89,7 +90,8 @@ namespace saitynai_backend.Controllers
                 Name = GroupDto.Name,
                 StudyYear = GroupDto.StudyYear,
                 StudyLevel = GroupDto.StudyLevel,
-                MentorId = GroupDto.MentorId
+                MentorId = GroupDto.MentorId,
+                UserId = ""
             };
 
             _context.Groups.Add(group);

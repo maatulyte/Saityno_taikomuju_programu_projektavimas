@@ -13,5 +13,9 @@ namespace saitynai_backend.Entities
         public int MentorId { get; set; }
         public Mentor Mentor { get; set; }
 
+        [Required]
+        public required string UserId { get; set; }
+        public User User { get; set; }
+
     }
 }

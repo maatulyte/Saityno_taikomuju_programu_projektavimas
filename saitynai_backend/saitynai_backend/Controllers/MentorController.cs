@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
 using System.Xml.Linq;
+using System.Security.Claims;
 
 namespace saitynai_backend.Controllers
 {
@@ -104,7 +105,8 @@ namespace saitynai_backend.Controllers
                 FacultyId = MentorDto.FacultyId,
                 StudyProgram = MentorDto.StudyProgram,
                 StudyYear = MentorDto.StudyYear,
-                StudyLevel = MentorDto.StudyLevel
+                StudyLevel = MentorDto.StudyLevel,
+                UserId = ""
 
             };
 

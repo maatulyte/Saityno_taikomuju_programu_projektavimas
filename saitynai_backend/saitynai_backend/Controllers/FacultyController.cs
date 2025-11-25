@@ -116,7 +116,8 @@ namespace saitynai_backend.Controllers
             Faculty faculty = new Faculty
             {
                 Name = FacultyDto.Name,
-                Address = FacultyDto.Address
+                Address = FacultyDto.Address,
+                UserId = ""
             };
 
             _context.Faculties.Add(faculty);
