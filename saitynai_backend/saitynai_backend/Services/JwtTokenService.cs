@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using saitynai_backend.Entities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -22,9 +23,9 @@ namespace saitynai_backend.Services
         {
             var authClaims = new List<Claim>
             {
-                new(ClaimTypes.Name, Username),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, UserId)
+                new (ClaimTypes.Name, Username),
+                new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new (JwtRegisteredClaimNames.Sub, UserId),
             };
 
             authClaims.AddRange(roles.Select(o => new Claim(ClaimTypes.Role, o)));
@@ -38,6 +39,49 @@ namespace saitynai_backend.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public string CreateRefreshToken(Guid sessionId, string UserId, DateTime expires)
+        {
+            var authClaims = new List<Claim>()
+            {
+                new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new (JwtRegisteredClaimNames.Sub, UserId),
+                new ("SessionId", sessionId.ToString())
+            };
+
+            var token = new JwtSecurityToken
+            (
+                issuer: _issuer,
+                audience: _audience,
+                expires: expires,
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(_authSigningKey, SecurityAlgorithms.HmacSha256)
+            );
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public bool TryParseRefreshToken(string refreshToken, out ClaimsPrincipal? claims)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler() {MapInboundClaims = false};
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = _issuer,
+                    ValidAudience = _audience,
+                    IssuerSigningKey = _authSigningKey,
+                    ValidateLifetime = true
+                };
+
+                claims = tokenHandler.ValidateToken(refreshToken, validationParameters, out _);
+                return true;
+            }
+            catch
+            {
+                claims = null;
+                return false;
+            }
         }
     }
 }

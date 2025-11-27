@@ -1,9 +1,11 @@
+using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using saitynai_backend;
 using saitynai_backend.Entities;
+using saitynai_backend.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<IdentitySeeder>();
+builder.Services.AddScoped<SessionService>();
+builder.Services.AddTransient<JwtTokenService>();
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
@@ -39,6 +45,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 var app = builder.Build();
+
+using var scope = app.Services.CreateScope();
+
+//var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+var dbSeeder = scope.ServiceProvider.GetRequiredService<IdentitySeeder>();
+await dbSeeder.SeedAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -1,11 +1,13 @@
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
-using System.Text.RegularExpressions;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace saitynai_backend.Controllers
 {
@@ -20,6 +22,7 @@ namespace saitynai_backend.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Mentor")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Entities.Group>>> GetGroups()
         {
@@ -41,6 +44,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "Mentor")]
         [HttpGet("{Id}")]
         public async Task<ActionResult<Entities.Group>> GetGroup(int Id)
         {
@@ -60,6 +64,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "Mentor")]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteGroup(int Id)
         {
@@ -73,6 +78,7 @@ namespace saitynai_backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Mentor")]
         [HttpPost]
         public async Task<ActionResult<Entities.Group>> CreateFaculty([FromBody] CreateGroupDTO GroupDto)
         {
@@ -91,7 +97,7 @@ namespace saitynai_backend.Controllers
                 StudyYear = GroupDto.StudyYear,
                 StudyLevel = GroupDto.StudyLevel,
                 MentorId = GroupDto.MentorId,
-                UserId = ""
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             _context.Groups.Add(group);
@@ -109,6 +115,7 @@ namespace saitynai_backend.Controllers
             return CreatedAtAction(nameof(GetGroup), new { id = group }, dto);
         }
 
+        [Authorize(Roles = "Mentor")]
         [HttpPut("{Id}")]
         public async Task<IActionResult> UpdateGroup([FromBody] UpdateGroupDTO dto, int Id)
         {

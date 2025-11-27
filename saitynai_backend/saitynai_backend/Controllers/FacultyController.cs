@@ -1,9 +1,12 @@
 using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace saitynai_backend.Controllers
 {
@@ -18,6 +21,7 @@ namespace saitynai_backend.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "SysAdmin")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Faculty>>> GetFaculties()
         {
@@ -37,6 +41,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "SysAdmin")]
         [HttpGet("{Id}")]
         public async Task<ActionResult<Faculty>> GetFaculty(int Id)
         {
@@ -54,6 +59,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "SysAdmin")]
         //konkreciu fakulteto mentoriu grupes perziura
         [HttpGet("{FacultyId}/mentors/groups")]
         public async Task<ActionResult<IEnumerable<Group>>> GetGroupsByMentorId(int FacultyId)
@@ -88,6 +94,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "SysAdmin")]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteFaculty(int Id)
         {
@@ -101,6 +108,7 @@ namespace saitynai_backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "SysAdmin")]
         [HttpPost]
         public async Task<ActionResult<Faculty>> CreateFaculty([FromBody] CreateFacultyDTO FacultyDto)
         {
@@ -117,7 +125,7 @@ namespace saitynai_backend.Controllers
             {
                 Name = FacultyDto.Name,
                 Address = FacultyDto.Address,
-                UserId = ""
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             _context.Faculties.Add(faculty);
@@ -133,6 +141,7 @@ namespace saitynai_backend.Controllers
             return CreatedAtAction(nameof(GetFaculty), new { id = faculty }, dto);
         }
 
+        [Authorize(Roles = "SysAdmin")]
         [HttpPut("{Id}")]
         public async Task<IActionResult> UpdateFaculty([FromBody] UpdateFacultyDTO dto, int Id)
         {

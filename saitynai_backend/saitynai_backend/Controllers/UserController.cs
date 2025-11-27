@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
 using saitynai_backend.Services;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography.Pkcs;
 
@@ -16,19 +18,19 @@ namespace saitynai_backend.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly JwtTokenService _jwtTokenService;
-        private object _validationService;
-        private object _sessionService;
+        private readonly SessionService _sessionService;
 
         public UserController(
             AppDbContext context,
             UserManager<User> userManager,
-            JwtTokenService jwtTokenService)
+            JwtTokenService jwtTokenService,
+            SessionService sessionService)
         {
             _context = context;
             _userManager = userManager;
             _jwtTokenService = jwtTokenService;
+            _sessionService = sessionService;
         }
-
 
         [HttpPost("register")]
         public async Task<IActionResult> registerUser([FromBody] UserRegisterDTO dto)
@@ -39,9 +41,9 @@ namespace saitynai_backend.Controllers
                 return UnprocessableEntity("Username already exists.");
             }
 
-            if (dto != null || !string.IsNullOrWhiteSpace(dto.Name) || !string.IsNullOrWhiteSpace(dto.Surname)
-                        || !string.IsNullOrWhiteSpace(dto.Username) || !string.IsNullOrWhiteSpace(dto.Email)
-                        || !string.IsNullOrWhiteSpace(dto.Password))
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Surname)
+                        || string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Email)
+                        || string.IsNullOrWhiteSpace(dto.Password))
             {
                 if (dto == null)
                 {
@@ -54,11 +56,10 @@ namespace saitynai_backend.Controllers
             {
                 Name = dto.Name,
                 Surname = dto.Surname,
-                Username = dto.Username,
+                UserName = dto.Username,
                 Email = dto.Email
             };
             
-
             var createdUserResult = await _userManager.CreateAsync(user, dto.Password);
             if (!createdUserResult.Succeeded)
             {
@@ -75,7 +76,7 @@ namespace saitynai_backend.Controllers
                 });
             }
 
-            var role = await _userManager.AddToRoleAsync(user, "Member");
+            var role = await _userManager.AddToRoleAsync(user, "SysAdmin");
             if (role == null)
             {
                 return UnprocessableEntity("Assigning role failed.");
@@ -108,10 +109,6 @@ namespace saitynai_backend.Controllers
             {
                 return UnprocessableEntity("Incorrect username or password.");
             }
-            //if (!await _validationService.ValidateLogin(dto))
-            //{
-            //    return NotFound($"User {dto.username} not found.");
-            //}
 
             var roles = await _userManager.GetRolesAsync(checkUser);
 
@@ -125,8 +122,8 @@ namespace saitynai_backend.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                //Secure = true,
+                SameSite = SameSiteMode.Lax,
                 Expires = expiresAt
             };
 
@@ -142,7 +139,8 @@ namespace saitynai_backend.Controllers
             {
                 return Unauthorized("Refresh token not found.");
             }
-            if (!_jwtTokenService.tryParseRefreshToken(refreshToken, out var claims))
+
+            if (!_jwtTokenService.TryParseRefreshToken(refreshToken, out var claims))
             {
                 return Unauthorized("Invalid refresh token.");
             }
@@ -159,9 +157,7 @@ namespace saitynai_backend.Controllers
                 return Unauthorized("Invalid refresh token.");
             }
 
-            var userId = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                      ?? claims.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                      ?? claims.FindFirst("uid")?.Value;
+            var userId = claims.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
@@ -172,21 +168,20 @@ namespace saitynai_backend.Controllers
             var roles = await _userManager.GetRolesAsync(user);
 
             var expiresAt = DateTime.UtcNow.AddDays(3);
-            var accessToken = _jwtTokenService.createAccessToken(user.UserName, user.Id.ToString(), roles);
-            var newRefreshToken = _jwtTokenService.createRefreshToken(sessionIdAsGuid, user.Id, expiresAt);
+            var accessToken = _jwtTokenService.CreateAccessToken(user.UserName, user.Id, roles);
+            var newRefreshToken = _jwtTokenService.CreateRefreshToken(sessionIdAsGuid, user.Id, expiresAt);
 
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.None,
+                //Secure = true,
+                SameSite = SameSiteMode.Lax,
                 Expires = expiresAt
             };
 
             HttpContext.Response.Cookies.Append("RefreshToken", newRefreshToken, cookieOptions);
 
             await _sessionService.ExtendSessionAsync(sessionIdAsGuid, newRefreshToken, expiresAt);
-
 
             return Ok(new SuccessfulLoginDTO(accessToken));
         }
@@ -198,7 +193,7 @@ namespace saitynai_backend.Controllers
             {
                 return Unauthorized("Refresh token not found.");
             }
-            if (!_jwtTokenService.tryParseRefreshToken(refreshToken, out var claims))
+            if (!_jwtTokenService.TryParseRefreshToken(refreshToken, out var claims))
             {
                 return Unauthorized("Invalid refresh token.");
             }
@@ -215,6 +210,7 @@ namespace saitynai_backend.Controllers
 
             return Ok();
         }
+
+        public record SuccessfulLoginDTO(string AccessToken);
     }
-        
 }

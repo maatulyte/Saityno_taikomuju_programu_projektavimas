@@ -1,12 +1,14 @@
 ﻿using Humanizer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using saitynai_backend.DataTransferObject;
 using saitynai_backend.Entities;
-using System.Xml.Linq;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Xml.Linq;
 
 namespace saitynai_backend.Controllers
 {
@@ -21,6 +23,7 @@ namespace saitynai_backend.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Coordinator")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Mentor>>> GetMentors()
         {
@@ -46,6 +49,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "Coordinator")]
         [HttpGet("{Id}")]
         public async Task<ActionResult<Mentor>> GetMentor(int Id)
         {
@@ -69,6 +73,7 @@ namespace saitynai_backend.Controllers
             return Ok(dto);
         }
 
+        [Authorize(Roles = "Coordinator")]
         [HttpDelete("{Id}")]
         public async Task<IActionResult> DeleteMentor(int Id)
         {
@@ -82,6 +87,7 @@ namespace saitynai_backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Coordinator")]
         [HttpPost]
         public async Task<ActionResult<Mentor>> CreateMentor([FromBody] CreateMentorDTO MentorDto)
         {
@@ -106,8 +112,7 @@ namespace saitynai_backend.Controllers
                 StudyProgram = MentorDto.StudyProgram,
                 StudyYear = MentorDto.StudyYear,
                 StudyLevel = MentorDto.StudyLevel,
-                UserId = ""
-
+                UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
             _context.Mentors.Add(mentor);
@@ -129,6 +134,7 @@ namespace saitynai_backend.Controllers
             return CreatedAtAction(nameof(GetMentor), new { id = mentor }, dto);
         }
 
+        [Authorize(Roles = "Coordinator")]
         [HttpPut("{Id}")]
         public async Task<IActionResult> UpdateMentor([FromBody] UpdateMentorDTO dto, int Id)
         {
@@ -153,6 +159,12 @@ namespace saitynai_backend.Controllers
             if (mentor == null)
             {
                 return NotFound($"Mentor with ID {Id} not found.");
+            }
+
+            //TODO: istrint po gynimo
+            if(!HttpContext.User.IsInRole("Coordinator") && mentor.UserId != HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub))
+            {
+                return Forbid();
             }
 
             mentor.Name = dto.Name;

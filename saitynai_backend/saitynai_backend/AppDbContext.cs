@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using saitynai_backend.Entities;
@@ -12,6 +13,8 @@ namespace saitynai_backend
         public DbSet<Faculty> Faculties { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<Mentor> Mentors { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
