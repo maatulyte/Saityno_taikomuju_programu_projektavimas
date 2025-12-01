@@ -102,6 +102,11 @@ namespace saitynai_backend.Controllers
                 return UnprocessableEntity("Invalid mentor data.");
             }
 
+            if (!await _context.Faculties.AnyAsync(f => f.Id == MentorDto.FacultyId))
+            {
+                return UnprocessableEntity($"Faculty with ID {MentorDto.FacultyId} does not exist.");
+            }
+
             Mentor mentor = new Mentor
             {
                 Name = MentorDto.Name,
@@ -161,8 +166,13 @@ namespace saitynai_backend.Controllers
                 return NotFound($"Mentor with ID {Id} not found.");
             }
 
+            if (!await _context.Faculties.AnyAsync(f => f.Id == dto.FacultyId))
+            {
+                return UnprocessableEntity($"Faculty with ID {dto.FacultyId} does not exist.");
+            }
+
             //TODO: istrint po gynimo
-            if(!HttpContext.User.IsInRole("Coordinator") && mentor.UserId != HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub))
+            if (!HttpContext.User.IsInRole("Coordinator") && mentor.UserId != HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub))
             {
                 return Forbid();
             }

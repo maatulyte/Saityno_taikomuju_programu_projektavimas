@@ -91,6 +91,12 @@ namespace saitynai_backend.Controllers
                 return UnprocessableEntity("Invalid group data.");
             }
 
+
+            if (!await _context.Mentors.AnyAsync(f => f.Id == GroupDto.MentorId))
+            {
+                return UnprocessableEntity($"Mentor with ID {GroupDto.MentorId} does not exist.");
+            }
+
             Entities.Group group = new Entities.Group
             {
                 Name = GroupDto.Name,
@@ -138,6 +144,11 @@ namespace saitynai_backend.Controllers
             if (group == null)
             {
                 return NotFound($"Group with ID {Id} not found.");
+            }
+
+            if (!await _context.Mentors.AnyAsync(f => f.Id == dto.MentorId))
+            {
+                return UnprocessableEntity($"Mentor with ID {dto.MentorId} does not exist.");
             }
 
             group.Name = dto.Name;
