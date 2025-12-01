@@ -67,3 +67,9 @@ app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Run();
+
+using (var scope2 = app.Services.CreateScope())
+{
+    var db = scope2.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
