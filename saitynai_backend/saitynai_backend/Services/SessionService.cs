@@ -43,7 +43,7 @@ namespace saitynai_backend.Services
         public async Task<bool> IsSessionValidAsync(Guid sessionId, string refreshToken)
         {
             var session = await dbContext.Sessions.FindAsync(sessionId);
-            return session is null && session.ExpiresAt > DateTimeOffset.UtcNow && !session.IsRevoked 
+            return session is not null && session.ExpiresAt > DateTimeOffset.UtcNow && !session.IsRevoked 
                 && session.LastRefreshToken == refreshToken.ToSHA256();
         }
     }
