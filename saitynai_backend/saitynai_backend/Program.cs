@@ -22,6 +22,20 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("_myAllowSpecificOrigins", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddScoped<IdentitySeeder>();
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddTransient<JwtTokenService>();
@@ -62,11 +76,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapControllers();
-app.UseResponseCaching();
+app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
+
 app.Run();
+
 
 using (var scope2 = app.Services.CreateScope())
 {

@@ -122,8 +122,8 @@ namespace saitynai_backend.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                //Secure = true,
-                SameSite = SameSiteMode.Lax,
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Expires = expiresAt
             };
 
@@ -174,8 +174,8 @@ namespace saitynai_backend.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                //Secure = true,
-                SameSite = SameSiteMode.Lax,
+                Secure = true,
+                SameSite = SameSiteMode.None,
                 Expires = expiresAt
             };
 
