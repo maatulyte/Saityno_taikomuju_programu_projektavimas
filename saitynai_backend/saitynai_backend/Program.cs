@@ -26,7 +26,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(MyAllowSpecificOrigins, policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+            .WithOrigins("http://localhost:5173", "http://127.0.0.1:5173", "https://saitynai-frontend-5s4hz.ondigitalocean.app")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
