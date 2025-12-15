@@ -82,7 +82,7 @@ namespace saitynai_backend.Controllers
         [HttpPost]
         public async Task<ActionResult<Entities.Group>> CreateFaculty([FromBody] CreateGroupDTO GroupDto)
         {
-            if (GroupDto == null || string.IsNullOrWhiteSpace(GroupDto.Name) || GroupDto.StudyYear <= 0 || GroupDto.MentorId <= 0)
+            if (GroupDto == null || string.IsNullOrWhiteSpace(GroupDto.Name) || GroupDto.StudyYear <= 0)
             {
                 if (GroupDto == null)
                 {
@@ -91,18 +91,12 @@ namespace saitynai_backend.Controllers
                 return UnprocessableEntity("Invalid group data.");
             }
 
-
-            if (!await _context.Mentors.AnyAsync(f => f.Id == GroupDto.MentorId))
-            {
-                return UnprocessableEntity($"Mentor with ID {GroupDto.MentorId} does not exist.");
-            }
-
             Entities.Group group = new Entities.Group
             {
                 Name = GroupDto.Name,
                 StudyYear = GroupDto.StudyYear,
                 StudyLevel = GroupDto.StudyLevel,
-                MentorId = GroupDto.MentorId,
+                MentorId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub),
                 UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
@@ -125,7 +119,7 @@ namespace saitynai_backend.Controllers
         [HttpPut("{Id}")]
         public async Task<IActionResult> UpdateGroup([FromBody] UpdateGroupDTO dto, int Id)
         {
-            if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || dto.StudyYear <= 0 || dto.MentorId <= 0)
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || dto.StudyYear <= 0 )
             {
                 if (dto == null)
                 {
@@ -146,15 +140,10 @@ namespace saitynai_backend.Controllers
                 return NotFound($"Group with ID {Id} not found.");
             }
 
-            if (!await _context.Mentors.AnyAsync(f => f.Id == dto.MentorId))
-            {
-                return UnprocessableEntity($"Mentor with ID {dto.MentorId} does not exist.");
-            }
-
             group.Name = dto.Name;
             group.StudyYear = dto.StudyYear;
             group.StudyLevel = dto.StudyLevel;
-            group.MentorId = dto.MentorId;
+            group.MentorId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub);
 
             _context.Groups.Update(group);
             await _context.SaveChangesAsync();

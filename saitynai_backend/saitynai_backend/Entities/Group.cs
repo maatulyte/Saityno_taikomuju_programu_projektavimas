@@ -10,7 +10,7 @@ namespace saitynai_backend.Entities
         public StudyLevel StudyLevel { get; set; }
         public int StudyYear { get; set; }  
 
-        public int MentorId { get; set; }
+        public string MentorId { get; set; }
         public Mentor Mentor { get; set; }
 
         [Required]

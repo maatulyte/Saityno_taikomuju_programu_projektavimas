@@ -7,7 +7,6 @@ namespace saitynai_backend.DataTransferObject
         public string Name { get; set; }
         public StudyLevel StudyLevel { get; set; }
         public int StudyYear { get; set; }
-        public int MentorId { get; set; }
     }
 
     public class UpdateGroupDTO
@@ -15,7 +14,6 @@ namespace saitynai_backend.DataTransferObject
         public string Name { get; set; }
         public StudyLevel StudyLevel { get; set; }
         public int StudyYear { get; set; }
-        public int MentorId { get; set; }
     }
 
     public class ResponseGroupDTO
@@ -24,6 +22,6 @@ namespace saitynai_backend.DataTransferObject
         public string Name { get; set; }
         public StudyLevel StudyLevel { get; set; }
         public int StudyYear { get; set; }
-        public int MentorId { get; set; }
+        public string MentorId { get; set; }
     }
 }

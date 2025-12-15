@@ -7,33 +7,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace saitynai_backend.Migrations
 {
     /// <inheritdoc />
-    public partial class identity : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "UserId",
-                table: "Mentors",
-                type: "varchar(255)",
-                nullable: false,
-                defaultValue: "")
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.AddColumn<string>(
-                name: "UserId",
-                table: "Groups",
-                type: "varchar(255)",
-                nullable: false,
-                defaultValue: "")
-                .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.AddColumn<string>(
-                name: "UserId",
-                table: "Faculties",
-                type: "varchar(255)",
-                nullable: false,
-                defaultValue: "")
+            migrationBuilder.AlterDatabase()
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
@@ -60,6 +39,10 @@ namespace saitynai_backend.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Surname = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     UserName = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -217,20 +200,128 @@ namespace saitynai_backend.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Mentors_UserId",
-                table: "Mentors",
-                column: "UserId");
+            migrationBuilder.CreateTable(
+                name: "Faculties",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Address = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Faculties", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Faculties_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Groups_UserId",
-                table: "Groups",
-                column: "UserId");
+            migrationBuilder.CreateTable(
+                name: "Sessions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    LastRefreshToken = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    InitiatedAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Sessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Sessions_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Faculties_UserId",
-                table: "Faculties",
-                column: "UserId");
+            migrationBuilder.CreateTable(
+                name: "Mentors",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Surname = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Email = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    PhoneNumber = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    FacultyId = table.Column<int>(type: "int", nullable: false),
+                    StudyLevel = table.Column<int>(type: "int", nullable: false),
+                    StudyProgram = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StudyYear = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Mentors", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Mentors_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Mentors_Faculties_FacultyId",
+                        column: x => x.FacultyId,
+                        principalTable: "Faculties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "Groups",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    StudyLevel = table.Column<int>(type: "int", nullable: false),
+                    StudyYear = table.Column<int>(type: "int", nullable: false),
+                    MentorId = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    UserId = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Groups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Groups_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Groups_Mentors_MentorId",
+                        column: x => x.MentorId,
+                        principalTable: "Mentors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -269,46 +360,40 @@ namespace saitynai_backend.Migrations
                 column: "NormalizedUserName",
                 unique: true);
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Faculties_AspNetUsers_UserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Faculties_UserId",
                 table: "Faculties",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                column: "UserId");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Groups_AspNetUsers_UserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Groups_MentorId",
                 table: "Groups",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                column: "MentorId");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Mentors_AspNetUsers_UserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Groups_UserId",
+                table: "Groups",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Mentors_FacultyId",
                 table: "Mentors",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                column: "FacultyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Mentors_UserId",
+                table: "Mentors",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sessions_UserId",
+                table: "Sessions",
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Faculties_AspNetUsers_UserId",
-                table: "Faculties");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Groups_AspNetUsers_UserId",
-                table: "Groups");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Mentors_AspNetUsers_UserId",
-                table: "Mentors");
-
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -325,34 +410,22 @@ namespace saitynai_backend.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "Sessions");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "Mentors");
+
+            migrationBuilder.DropTable(
+                name: "Faculties");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Mentors_UserId",
-                table: "Mentors");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Groups_UserId",
-                table: "Groups");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Faculties_UserId",
-                table: "Faculties");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Mentors");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Groups");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Faculties");
         }
     }
 }
