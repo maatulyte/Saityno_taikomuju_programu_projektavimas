@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import { api } from "../api/axios";
 import type { Faculty } from "../types";
 import Navbar from "@/components/Navbar";
+import { useAuth } from "@/auth/AuthContext";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,89 +11,254 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/auth/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
-type CreateFacultyDto = {
+type FacultyListItem = Faculty & {
+  address?: string | null; // in case list endpoint includes it
+};
+
+type FacultyDto = {
   name: string;
   address: string;
 };
 
-export default function Faculties() {
-  const [items, setItems] = useState<Faculty[]>([]);
-  const [error, setError] = useState("");
+function errMsg(e: unknown) {
+  return axios.isAxiosError(e)
+    ? (e.response?.data as any)?.message ||
+        (e.response?.data as any)?.title ||
+        (typeof e.response?.data === "string" ? e.response.data : null) ||
+        e.message
+    : (e as Error).message;
+}
 
+export default function Faculties() {
   const { hasRole } = useAuth();
   const canManage = hasRole("SysAdmin");
 
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [createError, setCreateError] = useState("");
+  const [items, setItems] = useState<FacultyListItem[]>([]);
+  const [generalError, setGeneralError] = useState("");
 
-  const [form, setForm] = useState<CreateFacultyDto>({
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const [form, setForm] = useState<FacultyDto>({
     name: "",
     address: "",
   });
 
+  const [modalError, setModalError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+
   async function loadFaculties() {
+    setGeneralError("");
     try {
-      const res = await api.get<Faculty[]>("/Faculty");
+      const res = await api.get<FacultyListItem[]>("/Faculty");
       setItems(res.data);
-    } catch (err) {
-      setError(
-        axios.isAxiosError(err)
-          ? err.response?.data?.message ?? err.message
-          : (err as Error).message
-      );
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        setItems([]);
+        setGeneralError("No faculties found.");
+        return;
+      }
+      setGeneralError(errMsg(e));
     }
   }
 
   useEffect(() => {
     loadFaculties();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function submitCreate(e: React.FormEvent) {
+  function openCreate() {
+    if (!canManage) return;
+    setModalError("");
+    setEditingId(null);
+    setForm({ name: "", address: "" });
+    setOpen(true);
+  }
+
+  function openEdit(f: FacultyListItem) {
+    if (!canManage) return;
+    setModalError("");
+    setEditingId(f.id);
+    setForm({
+      name: f.name ?? "",
+      address: f.address ?? "",
+    });
+    setOpen(true);
+  }
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setCreateError("");
-    setLoading(true);
+    if (!canManage) return;
+
+    setModalError("");
+    setSaving(true);
 
     try {
-      await api.post("/Faculty", form); // POST /Faculty
+      const name = form.name.trim();
+      const address = form.address.trim();
+
+      if (!name || !address) {
+        setModalError("Name and address are required.");
+        return;
+      }
+
+      const body = { name, address };
+
+      if (editingId) {
+        await api.put(`/Faculty/${editingId}`, { id: editingId, ...body });
+      } else {
+        await api.post("/Faculty", body);
+      }
+
       setOpen(false);
-      setForm({ name: "", address: "" });
       await loadFaculties();
-    } catch (err) {
-      setCreateError(
-        axios.isAxiosError(err)
-          ? err.response?.data?.message ?? err.message
-          : (err as Error).message
-      );
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 422) {
+        const msg =
+          (e.response.data as any)?.message ||
+          (e.response.data as any)?.title ||
+          (typeof e.response.data === "string"
+            ? e.response.data
+            : "Validation error. Please check the form.");
+        setModalError(msg);
+        return;
+      }
+
+      setModalError(errMsg(e));
     } finally {
-      setLoading(false);
+      setSaving(false);
+    }
+  }
+
+  async function remove(id: number) {
+    if (!canManage) return;
+    setGeneralError("");
+    setDeletingId(id);
+
+    try {
+      await api.delete(`/Faculty/${id}`);
+      await loadFaculties();
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 422) {
+        const msg =
+          (e.response.data as any)?.message ||
+          (e.response.data as any)?.title ||
+          (typeof e.response.data === "string"
+            ? e.response.data
+            : "Validation error.");
+        setGeneralError(msg);
+        return;
+      }
+
+      setGeneralError(errMsg(e));
+    } finally {
+      setDeletingId(null);
     }
   }
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <Navbar />
-        <h2 className="text-2xl font-semibold">Faculties</h2>
+    <div className="min-h-screen">
+      <Navbar />
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button>+ Create Faculty</Button>
-          </DialogTrigger>
+      <div className="p-6 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Faculties</h1>
+          {canManage && <Button onClick={openCreate}>Create Faculty</Button>}
+        </div>
 
+        {generalError && (
+          <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            {generalError}
+          </div>
+        )}
+
+        <div className="space-y-2">
+          {items.map((f) => (
+            <div
+              key={f.id}
+              className="rounded-lg border p-4 flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <div className="font-medium truncate">{f.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {f.address ?? "—"}
+                </div>
+              </div>
+
+              {canManage && (
+                <div className="flex gap-2 shrink-0">
+                  <Button variant="outline" onClick={() => openEdit(f)}>
+                    Edit
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        disabled={deletingId === f.id}
+                      >
+                        {deletingId === f.id ? "Deleting..." : "Delete"}
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete faculty?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={deletingId === f.id}>
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => remove(f.id)}
+                          disabled={deletingId === f.id}
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* CREATE / EDIT */}
+        <Dialog open={open} onOpenChange={(v) => !saving && setOpen(v)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create Faculty</DialogTitle>
+              <DialogTitle>
+                {editingId ? "Edit Faculty" : "Create Faculty"}
+              </DialogTitle>
+              <DialogDescription>
+                Fill faculty details and save.
+              </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={submitCreate} className="space-y-4">
+            <form onSubmit={submit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -118,8 +283,10 @@ export default function Faculties() {
                 />
               </div>
 
-              {createError && (
-                <p className="text-sm text-destructive">{createError}</p>
+              {modalError && (
+                <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                  {modalError}
+                </div>
               )}
 
               <DialogFooter>
@@ -127,32 +294,17 @@ export default function Faculties() {
                   type="button"
                   variant="outline"
                   onClick={() => setOpen(false)}
-                  disabled={loading}
+                  disabled={saving}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create"}
+                <Button type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {error && <p className="text-destructive">{error}</p>}
-
-      <div className="space-y-2">
-        {items.map((f) => (
-          <div key={f.id}>
-            <Link
-              to={`/faculties/${f.id}`}
-              className="text-primary hover:underline"
-            >
-              {f.name}
-            </Link>
-          </div>
-        ))}
       </div>
     </div>
   );

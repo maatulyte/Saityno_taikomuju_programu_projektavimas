@@ -35,17 +35,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type Mentor = {
+  id: number;
+  name: string;
+  surname: string;
+  email: string;
+};
+
 type Group = {
   id: number;
   name: string;
   studyYear: number;
   studyLevel: number; // 0/1/2 iš backend
+  mentorId: number;
 };
 
 type GroupDto = {
   name: string;
   studyYear: number;
   studyLevel: number; // 0/1/2
+  mentorId: number;
 };
 
 const STUDY_LEVELS = [
@@ -69,11 +78,15 @@ export default function Groups() {
   const [items, setItems] = useState<Group[]>([]);
   const [generalError, setGeneralError] = useState("");
 
+  const [mentors, setMentors] = useState<Mentor[]>([]);
+  const [mentorsError, setMentorsError] = useState("");
+
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<GroupDto>({
     name: "",
     studyYear: new Date().getFullYear(),
-    studyLevel: 0, // ✅ default
+    studyLevel: 0,
+    mentorId: 0,
   });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [modalError, setModalError] = useState("");
@@ -112,8 +125,22 @@ export default function Groups() {
     }
   }
 
+  async function loadMentors() {
+    try {
+      const res = await api.get<Mentor[]>("/Mentor");
+      setMentors(res.data);
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        setMentors([]);
+        return;
+      }
+      setMentorsError(errMsg(e));
+    }
+  }
+
   useEffect(() => {
     load();
+    loadMentors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -125,7 +152,8 @@ export default function Groups() {
     setForm({
       name: "",
       studyYear: new Date().getFullYear(),
-      studyLevel: 0, // ✅
+      studyLevel: 0,
+      mentorId: 0,
     });
     setOpen(true);
   }
@@ -141,7 +169,8 @@ export default function Groups() {
       studyYear: Number.isFinite(g.studyYear)
         ? g.studyYear
         : new Date().getFullYear(),
-      studyLevel: Number.isFinite(g.studyLevel) ? g.studyLevel : 0, // ✅
+      studyLevel: Number.isFinite(g.studyLevel) ? g.studyLevel : 0,
+      mentorId: Number.isFinite((g as any).mentorId) ? (g as any).mentorId : 0, // if TS complains, ensure Group includes mentorId
     });
 
     setOpen(true);
@@ -161,10 +190,16 @@ export default function Groups() {
           ? form.studyYear
           : new Date().getFullYear(),
         studyLevel: form.studyLevel,
+        mentorId: Number(form.mentorId),
       };
 
       if (!payload.name) {
         setModalError("Group name is required.");
+        return;
+      }
+
+      if (!Number.isFinite(payload.mentorId) || payload.mentorId <= 0) {
+        setModalError("Please select a mentor.");
         return;
       }
 
@@ -179,17 +214,9 @@ export default function Groups() {
       }
 
       if (editingId) {
-        await api.put(`/Group/${editingId}`, {
-          name: payload.name,
-          studyYear: payload.studyYear,
-          studyLevel: payload.studyLevel,
-        });
+        await api.put(`/Group/${editingId}`, payload);
       } else {
-        await api.post("/Group", {
-          name: payload.name,
-          studyYear: payload.studyYear,
-          studyLevel: payload.studyLevel,
-        });
+        await api.post("/Group", payload);
       }
 
       setOpen(false);
@@ -255,8 +282,6 @@ export default function Groups() {
 
         {loadingList ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
-        ) : items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No groups found.</p>
         ) : (
           <div className="space-y-2">
             {items.map((g) => (
@@ -382,6 +407,30 @@ export default function Groups() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Mentor</Label>
+                <Select
+                  value={form.mentorId ? String(form.mentorId) : ""}
+                  onValueChange={(v) =>
+                    setForm({ ...form, mentorId: Number(v) })
+                  }
+                >
+                  <SelectTrigger disabled={mentors.length === 0}>
+                    <SelectValue placeholder="Select mentor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mentors.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.name} {m.surname}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {mentorsError && (
+                  <p className="text-sm text-destructive">{mentorsError}</p>
+                )}
               </div>
 
               {modalError && (

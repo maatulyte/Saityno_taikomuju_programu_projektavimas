@@ -57,6 +57,17 @@ type MentorDto = {
   studyLevel: number; // enum
 };
 
+type Faculty = {
+  id: number;
+  name: string;
+};
+
+type FacultyDto = {
+  id: number;
+  name: string;
+  address: string;
+};
+
 const STUDY_LEVELS = [
   { value: 0, label: "Bachelor" },
   { value: 1, label: "Master" },
@@ -76,7 +87,10 @@ export default function Mentors() {
   const canManage = hasRole("Coordinator");
 
   const [items, setItems] = useState<Mentor[]>([]);
-  const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
+
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
+  const [facultiesError, setFacultiesError] = useState("");
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -113,14 +127,24 @@ export default function Mentors() {
     }
   }
 
+  async function loadFaculties() {
+    try {
+      const res = await api.get<Faculty[]>("/Faculty");
+      setFaculties(res.data);
+    } catch (e) {
+      setFacultiesError(errMsg(e));
+    }
+  }
+
   useEffect(() => {
-    load().catch((e) => setError(errMsg(e)));
+    load().catch((e) => setModalError(errMsg(e)));
+    loadFaculties();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function openCreate() {
     if (!canManage) return;
-    setError("");
+    setModalError("");
     setEditingId(null);
     setForm({
       name: "",
@@ -137,7 +161,7 @@ export default function Mentors() {
 
   function openEdit(m: Mentor) {
     if (!canManage) return;
-    setError("");
+    setModalError("");
     setEditingId(m.id);
     setForm({
       name: m.name ?? "",
@@ -158,7 +182,7 @@ export default function Mentors() {
     e.preventDefault();
     if (!canManage) return;
 
-    setError("");
+    setModalError("");
     setSaving(true);
 
     try {
@@ -172,27 +196,27 @@ export default function Mentors() {
       const studyLevel = Number(form.studyLevel);
 
       if (!name || !surname || !email) {
-        setError("Name, surname and email are required.");
-        return;
-      }
-
-      if (!Number.isFinite(facultyId) || facultyId <= 0) {
-        setError("FacultyId must be > 0.");
+        setModalError("Name, surname and email are required.");
         return;
       }
 
       if (!studyProgram) {
-        setError("Study program is required.");
+        setModalError("Study program is required.");
         return;
       }
 
       if (!Number.isFinite(studyYear) || studyYear <= 0) {
-        setError("Study year must be valid.");
+        setModalError("Study year must be valid.");
         return;
       }
 
       if (!Number.isFinite(studyLevel) || studyLevel < 0 || studyLevel > 2) {
-        setError("Study level must be selected.");
+        setModalError("Study level must be selected.");
+        return;
+      }
+
+      if (!Number.isFinite(facultyId) || facultyId <= 0) {
+        setModalError("Please select a faculty.");
         return;
       }
 
@@ -237,14 +261,14 @@ export default function Mentors() {
 
   async function remove(id: number) {
     if (!canManage) return;
-    setError("");
+    setModalError("");
     setDeletingId(id);
     try {
       await api.delete(`/Mentor/${id}`);
 
       await load();
     } catch (e) {
-      setError(errMsg(e));
+      setModalError(errMsg(e));
     } finally {
       setDeletingId(null);
     }
@@ -375,14 +399,30 @@ export default function Mentors() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label>Faculty ID</Label>
-                  <Input
-                    type="number"
-                    value={form.facultyId || ""}
-                    onChange={(e) =>
-                      setForm({ ...form, facultyId: Number(e.target.value) })
+                  <Label>Faculty</Label>
+                  <Select
+                    value={form.facultyId ? String(form.facultyId) : ""}
+                    onValueChange={(v) =>
+                      setForm({ ...form, facultyId: Number(v) })
                     }
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select faculty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {faculties.map((f) => (
+                        <SelectItem key={f.id} value={String(f.id)}>
+                          {f.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {facultiesError && (
+                    <div className="text-sm text-destructive">
+                      {facultiesError}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -427,6 +467,10 @@ export default function Mentors() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {modalError && (
+                    <p className="text-sm text-destructive">{modalError}</p>
+                  )}
                 </div>
               </div>
 
