@@ -72,7 +72,7 @@ export default function Navbar() {
 
   return (
     <header className="border-b">
-      <nav className="h-14 px-4 flex items-center gap-4">
+      <nav className="font-mono h-14 px-4 flex items-center gap-4">
         {/* Left: brand + desktop links */}
         <div className="flex items-center gap-4">
           {/* Desktop links */}
