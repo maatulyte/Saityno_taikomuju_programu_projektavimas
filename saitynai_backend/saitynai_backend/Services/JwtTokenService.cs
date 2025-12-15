@@ -13,9 +13,9 @@ namespace saitynai_backend.Services
         private readonly string _audience;
         public JwtTokenService(IConfiguration configuration)
         {
-            _authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]));
-            _issuer = configuration["JWT:ValidIssuer"];
-            _audience = configuration["JWT:ValidAudience"];
+            _authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]));
+            _issuer = configuration["Jwt:ValidIssuer"];
+            _audience = configuration["Jwt:ValidAudience"];
         }
 
 
