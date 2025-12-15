@@ -12,7 +12,7 @@ using saitynai_backend;
 namespace saitynai_backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251215125058_init")]
+    [Migration("20251215200714_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -192,9 +192,8 @@ namespace saitynai_backend.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("MentorId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("MentorId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -221,8 +220,11 @@ namespace saitynai_backend.Migrations
 
             modelBuilder.Entity("saitynai_backend.Entities.Mentor", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()

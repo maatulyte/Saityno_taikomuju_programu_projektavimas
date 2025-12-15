@@ -254,8 +254,8 @@ namespace saitynai_backend.Migrations
                 name: "Mentors",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     Name = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Surname = table.Column<string>(type: "longtext", nullable: false)
@@ -300,8 +300,7 @@ namespace saitynai_backend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     StudyLevel = table.Column<int>(type: "int", nullable: false),
                     StudyYear = table.Column<int>(type: "int", nullable: false),
-                    MentorId = table.Column<string>(type: "varchar(255)", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    MentorId = table.Column<int>(type: "int", nullable: false),
                     UserId = table.Column<string>(type: "varchar(255)", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4")
                 },

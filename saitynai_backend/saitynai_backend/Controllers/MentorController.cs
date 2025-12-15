@@ -23,7 +23,7 @@ namespace saitynai_backend.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Coordinator")]
+        [Authorize(Roles = "Coordinator, Mentor")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Mentor>>> GetMentors()
         {
@@ -51,7 +51,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpGet("{Id}")]
-        public async Task<ActionResult<Mentor>> GetMentor(string Id)
+        public async Task<ActionResult<Mentor>> GetMentor(int Id)
         {
             var Mentor = await _context.Mentors.FindAsync(Id);
             if (Mentor == null)
@@ -75,7 +75,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpDelete("{Id}")]
-        public async Task<IActionResult> DeleteMentor(string Id)
+        public async Task<IActionResult> DeleteMentor(int Id)
         {
             var Mentor = await _context.Mentors.FindAsync(Id);
             if (Mentor == null)
@@ -109,7 +109,6 @@ namespace saitynai_backend.Controllers
 
             Mentor mentor = new Mentor
             {
-                Id = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Name = MentorDto.Name,
                 Surname = MentorDto.Surname,
                 Email = MentorDto.Email,
@@ -142,7 +141,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateMentor([FromBody] UpdateMentorDTO dto, string Id)
+        public async Task<IActionResult> UpdateMentor([FromBody] UpdateMentorDTO dto, int Id)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Surname)
                 || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.PhoneNumber)

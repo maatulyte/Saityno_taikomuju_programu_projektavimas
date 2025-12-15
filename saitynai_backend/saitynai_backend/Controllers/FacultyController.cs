@@ -21,7 +21,7 @@ namespace saitynai_backend.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "SysAdmin")]
+        [Authorize(Roles = "SysAdmin, Coordinator")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Faculty>>> GetFaculties()
         {
