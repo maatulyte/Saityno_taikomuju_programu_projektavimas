@@ -1,37 +1,83 @@
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { api } from "../api/axios";
 import {
-  getAccessToken,
-  removeAccessToken,
   saveAccessToken,
+  removeAccessToken,
+  getAccessToken,
 } from "../storage/tokenStorage";
-import type { LoginDto, RegisterDto } from "../types";
+import type { RegisterDto } from "@/types";
 
-interface AuthContextValue {
+type MeDto = {
+  id: string;
+  userName: string;
+  email?: string | null;
+  roles: string[];
+};
+
+type AuthContextValue = {
   isAuthed: boolean;
-  login(dto: LoginDto): Promise<void>;
+  loading: boolean; // ✅ add
+  me: MeDto | null;
+  roles: string[];
+  hasRole: (...roles: string[]) => boolean;
+  login: (dto: { username: string; password: string }) => Promise<void>;
   register(dto: RegisterDto): Promise<void>;
   logout(): Promise<void>;
-}
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthed, setIsAuthed] = useState<boolean>(() =>
-    Boolean(getAccessToken())
-  );
+  const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [me, setMe] = useState<MeDto | null>(null);
 
-  async function login(dto: LoginDto) {
-    // 1) sets refresh cookie
+  const hasRole = (...need: string[]) => need.some((r) => roles.includes(r));
+
+  async function loadMe() {
+    try {
+      // if you store access token locally, ensure api interceptor attaches it
+      // otherwise refresh it first:
+      if (!getAccessToken()) {
+        const at = await api.post<{ accessToken: string }>("/User/accessToken");
+        saveAccessToken(at.data.accessToken ?? (at.data as any));
+      }
+
+      const me = await api.get<MeDto>("/User/me");
+      setRoles(me.data.roles ?? []);
+      setMe(me.data);
+      setIsAuthed(true);
+    } catch {
+      setRoles([]);
+      setIsAuthed(false);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMe();
+  }, []);
+
+  async function login(dto: { username: string; password: string }) {
     await api.post("/User/login", dto);
+    const at = await api.post<{ accessToken: string }>("/User/accessToken");
+    saveAccessToken(at.data.accessToken ?? (at.data as any));
+    await loadMe();
+  }
 
-    // 2) uses refresh cookie to get access token
-    const res = await api.post<string>("/User/accessToken");
-
-    // IMPORTANT: res.data must be the token string. If backend returns { token: "..." } adjust below.
-    saveAccessToken((res.data as any).accessToken);
-
-    setIsAuthed(true);
+  async function logout() {
+    await api.post("/User/logout");
+    removeAccessToken();
+    setRoles([]);
+    setIsAuthed(false);
   }
 
   async function register(dto: RegisterDto) {
@@ -39,18 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await login({ username: dto.username, password: dto.password });
   }
 
-  async function logout() {
-    try {
-      await api.post("/User/logout");
-    } finally {
-      removeAccessToken();
-      setIsAuthed(false);
-    }
-  }
-
   const value = useMemo(
-    () => ({ isAuthed, login, register, logout }),
-    [isAuthed]
+    () => ({ isAuthed, loading, me, roles, hasRole, login, register, logout }),
+    [isAuthed, loading, roles]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

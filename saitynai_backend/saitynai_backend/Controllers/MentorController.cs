@@ -51,7 +51,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpGet("{Id}")]
-        public async Task<ActionResult<Mentor>> GetMentor(int Id)
+        public async Task<ActionResult<Mentor>> GetMentor(string Id)
         {
             var Mentor = await _context.Mentors.FindAsync(Id);
             if (Mentor == null)
@@ -75,7 +75,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpDelete("{Id}")]
-        public async Task<IActionResult> DeleteMentor(int Id)
+        public async Task<IActionResult> DeleteMentor(string Id)
         {
             var Mentor = await _context.Mentors.FindAsync(Id);
             if (Mentor == null)
@@ -109,6 +109,7 @@ namespace saitynai_backend.Controllers
 
             Mentor mentor = new Mentor
             {
+                Id = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub),
                 Name = MentorDto.Name,
                 Surname = MentorDto.Surname,
                 Email = MentorDto.Email,
@@ -141,7 +142,7 @@ namespace saitynai_backend.Controllers
 
         [Authorize(Roles = "Coordinator")]
         [HttpPut("{Id}")]
-        public async Task<IActionResult> UpdateMentor([FromBody] UpdateMentorDTO dto, int Id)
+        public async Task<IActionResult> UpdateMentor([FromBody] UpdateMentorDTO dto, string Id)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(dto.Surname)
                 || string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.PhoneNumber)
@@ -149,14 +150,9 @@ namespace saitynai_backend.Controllers
             {
                 if (dto == null)
                 {
-                    return BadRequest("Invalid post data.");
+                    return BadRequest("Invalid Mentor data.");
                 }
-                return UnprocessableEntity("Invalid post data.");
-            }
-
-            if (Id <= 0)
-            {
-                return BadRequest("Invalid post ID.");
+                return UnprocessableEntity("Invalid Mentor data.");
             }
 
             var mentor = await _context.Mentors.FindAsync(Id);

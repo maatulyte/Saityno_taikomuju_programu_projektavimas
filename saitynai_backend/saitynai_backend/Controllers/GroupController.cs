@@ -1,6 +1,7 @@
-using Humanizer;
+﻿using Humanizer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using saitynai_backend.DataTransferObject;
@@ -90,13 +91,20 @@ namespace saitynai_backend.Controllers
                 }
                 return UnprocessableEntity("Invalid group data.");
             }
+             
+            var mentor = await _context.Mentors.FindAsync(HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub));
+            if (mentor == null)
+            {
+                mentor = await _context.Mentors
+                    .FirstOrDefaultAsync();
+            }
 
             Entities.Group group = new Entities.Group
             {
                 Name = GroupDto.Name,
                 StudyYear = GroupDto.StudyYear,
                 StudyLevel = GroupDto.StudyLevel,
-                MentorId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub),
+                MentorId = mentor.Id,
                 UserId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
             };
 
@@ -140,10 +148,16 @@ namespace saitynai_backend.Controllers
                 return NotFound($"Group with ID {Id} not found.");
             }
 
+            var mentor = await _context.Mentors.FindAsync(HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub));
+            if (mentor == null)
+            {
+                mentor = await _context.Mentors
+                    .FirstOrDefaultAsync();
+            }
             group.Name = dto.Name;
             group.StudyYear = dto.StudyYear;
             group.StudyLevel = dto.StudyLevel;
-            group.MentorId = HttpContext.User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+            group.MentorId = mentor.Id;
 
             _context.Groups.Update(group);
             await _context.SaveChangesAsync();
