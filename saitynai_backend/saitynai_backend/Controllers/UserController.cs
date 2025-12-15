@@ -8,6 +8,7 @@ using saitynai_backend.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography.Pkcs;
+using saitynai_backend.DTOs;
 
 namespace saitynai_backend.Controllers
 {
@@ -209,6 +210,49 @@ namespace saitynai_backend.Controllers
             HttpContext.Response.Cookies.Delete("RefreshToken");
 
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<ActionResult<MeDto>> Me()
+        {
+            if(!HttpContext.Request.Cookies.TryGetValue("RefreshToken", out var refreshToken))
+            {
+                return Unauthorized("Refresh token not found.");
+            }
+
+            if (!_jwtTokenService.TryParseRefreshToken(refreshToken, out var claims))
+            {
+                return Unauthorized("Invalid refresh token.");
+            }
+
+            var sessionId = claims.FindFirstValue("SessionId");
+            if (sessionId == null)
+            {
+                return Unauthorized("Invalid refresh token.");
+            }
+
+            var sessionIdAsGuid = Guid.Parse(sessionId);
+            if (!await _sessionService.IsSessionValidAsync(sessionIdAsGuid, refreshToken))
+            {
+                return Unauthorized("Invalid refresh token.");
+            }
+
+            var userId = claims.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return Unauthorized();
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new MeDto(
+                user.Id,
+                user.UserName ?? "",
+                user.Email,
+                roles
+            ));
         }
 
         public record SuccessfulLoginDTO(string AccessToken);
