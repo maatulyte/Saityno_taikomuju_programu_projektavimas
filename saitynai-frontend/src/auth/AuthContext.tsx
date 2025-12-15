@@ -12,7 +12,6 @@ import {
   getAccessToken,
 } from "../storage/tokenStorage";
 import type { RegisterDto } from "@/types";
-import { useNavigate } from "react-router-dom";
 
 type MeDto = {
   id: string;
@@ -35,7 +34,6 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<string[]>([]);
   const [isAuthed, setIsAuthed] = useState(false);

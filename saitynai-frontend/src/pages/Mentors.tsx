@@ -62,12 +62,6 @@ type Faculty = {
   name: string;
 };
 
-type FacultyDto = {
-  id: number;
-  name: string;
-  address: string;
-};
-
 const STUDY_LEVELS = [
   { value: 0, label: "Bachelor" },
   { value: 1, label: "Master" },
