@@ -1,0 +1,1159 @@
+openapi: 3.0.4
+info:
+  title: saitynai_backend (responses based on controllers)
+  version: "1.0"
+servers:
+  - url: /
+tags:
+  - name: Faculty
+  - name: Group
+  - name: Mentor
+  - name: User
+
+paths:
+  /Faculty:
+    get:
+      tags: [Faculty]
+      summary: Get faculties
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResponseFacultyDTO"
+              examples:
+                ok:
+                  value:
+                    - id: 1
+                      name: Faculty of IT
+                      address: Vilnius...
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No faculties found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No faculties found.
+
+    post:
+      tags: [Faculty]
+      summary: Create faculty
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFacultyDTO"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFacultyDTO"
+              examples:
+                created:
+                  value:
+                    id: 12
+                    name: New Faculty
+                    address: Address...
+        "400":
+          description: Invalid community data. (null body)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid community data.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Invalid community data. (missing/blank fields)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                unprocessable:
+                  value: Invalid community data.
+
+  /Faculty/{Id}:
+    get:
+      tags: [Faculty]
+      summary: Get faculty by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseFacultyDTO"
+              examples:
+                ok:
+                  value:
+                    id: 1
+                    name: Faculty of IT
+                    address: Vilnius...
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No faculty found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No faculty found.
+
+    put:
+      tags: [Faculty]
+      summary: Update faculty by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFacultyDTO"
+      responses:
+        "200":
+          description: OK (empty body)
+        "400":
+          description: Invalid post data. (null dto) OR Invalid post ID.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                nullDto:
+                  value: Invalid post data.
+                invalidId:
+                  value: Invalid post ID.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Community with ID {Id} not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: Community with ID 123 not found.
+        "422":
+          description: Invalid post data. (missing/blank fields)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                unprocessable:
+                  value: Invalid post data.
+
+    delete:
+      tags: [Faculty]
+      summary: Delete faculty by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No faculty found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No faculty found.
+
+  /Faculty/{FacultyId}/mentors/groups:
+    get:
+      tags: [Faculty]
+      summary: Get groups belonging to mentors of a faculty
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: FacultyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResponseGroupDTO"
+              examples:
+                ok:
+                  value:
+                    - id: 5
+                      name: Group A
+                      studyLevel: 1
+                      studyYear: 2
+                      mentorId: 10
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Not found (either no mentors, or no groups)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                noMentors:
+                  value: No mentors found for faculty ID 1.
+                noGroups:
+                  value: No groups found for community ID 1.
+
+  /Group:
+    get:
+      tags: [Group]
+      summary: Get groups
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResponseGroupDTO"
+              examples:
+                ok:
+                  value:
+                    - id: 1
+                      name: Group A
+                      studyLevel: 1
+                      studyYear: 2
+                      mentorId: 10
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No groups found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No groups found.
+
+    post:
+      tags: [Group]
+      summary: Create group
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupDTO"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseGroupDTO"
+              examples:
+                created:
+                  value:
+                    id: 99
+                    name: Group X
+                    studyLevel: 2
+                    studyYear: 1
+                    mentorId: 10
+        "400":
+          description: Invalid group data. (null body)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid group data.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Invalid group data. (name blank or studyYear <= 0)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                unprocessable:
+                  value: Invalid group data.
+
+  /Group/{Id}:
+    get:
+      tags: [Group]
+      summary: Get group by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseGroupDTO"
+              examples:
+                ok:
+                  value:
+                    id: 1
+                    name: Group A
+                    studyLevel: 1
+                    studyYear: 2
+                    mentorId: 10
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No group found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No group found.
+
+    put:
+      tags: [Group]
+      summary: Update group by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateGroupDTO"
+      responses:
+        "200":
+          description: OK (empty body)
+        "400":
+          description: Invalid post data. (null dto) OR Invalid post ID.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                nullDto:
+                  value: Invalid post data.
+                invalidId:
+                  value: Invalid post ID.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Group with ID {Id} not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: Group with ID 123 not found.
+        "422":
+          description: Invalid post data. (name blank or studyYear <= 0)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                unprocessable:
+                  value: Invalid post data.
+
+    delete:
+      tags: [Group]
+      summary: Delete group by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No group found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No group found.
+
+  /Mentor:
+    get:
+      tags: [Mentor]
+      summary: Get mentors
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResponseMentorDTO"
+              examples:
+                ok:
+                  value:
+                    - id: 10
+                      name: Jonas
+                      surname: Jonaitis
+                      email: jonas@uni.lt
+                      phoneNumber: "+37060000000"
+                      facultyId: 1
+                      studyProgram: Software Engineering
+                      studyYear: 2
+                      studyLevel: 1
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No mentors found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No mentors found.
+
+    post:
+      tags: [Mentor]
+      summary: Create mentor
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMentorDTO"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseMentorDTO"
+        "400":
+          description: Invalid mentor data. (null body)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid mentor data.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          description: Invalid mentor data OR Faculty does not exist
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                invalid:
+                  value: Invalid mentor data.
+                facultyMissing:
+                  value: Faculty with ID 123 does not exist.
+
+  /Mentor/{Id}:
+    get:
+      tags: [Mentor]
+      summary: Get mentor by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResponseMentorDTO"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No mentor found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No mentor found.
+
+    put:
+      tags: [Mentor]
+      summary: Update mentor by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMentorDTO"
+      responses:
+        "200":
+          description: OK (empty body)
+        "400":
+          description: Invalid Mentor data. (null dto)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid Mentor data.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden (Forbid())
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                forbidden:
+                  value: Forbidden
+        "404":
+          description: Mentor with ID {Id} not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: Mentor with ID 123 not found.
+        "422":
+          description: Invalid Mentor data OR Faculty does not exist
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                invalid:
+                  value: Invalid Mentor data.
+                facultyMissing:
+                  value: Faculty with ID 123 does not exist.
+
+    delete:
+      tags: [Mentor]
+      summary: Delete mentor by id
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "204":
+          description: No Content
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: No mentor found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                notFound:
+                  value: No mentor found.
+
+  /User/register:
+    post:
+      tags: [User]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterDTO"
+      responses:
+        "201":
+          description: Created (empty body)
+        "400":
+          description: Invalid user data. (null body)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid user data.
+        "422":
+          description: Unprocessable (username exists / invalid fields / role assign failed / identity errors)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                usernameExists:
+                  value: Username already exists.
+                invalidUserData:
+                  value: Invalid user data.
+                roleFailed:
+                  value: Assigning role failed.
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityCreateUserFailed"
+              examples:
+                identityErrors:
+                  value:
+                    message: User creation failed
+                    errors:
+                      - code: PasswordTooShort
+                        description: Passwords must be at least X characters.
+
+  /User/login:
+    post:
+      tags: [User]
+      summary: Login user (sets RefreshToken cookie)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLoginDTO"
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: RefreshToken cookie (HttpOnly; Secure; SameSite=None; Expires=...)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulLoginDTO"
+              examples:
+                ok:
+                  value:
+                    accessToken: eyJhbGciOi...
+        "400":
+          description: Invalid user data. (null body)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                badRequest:
+                  value: Invalid user data.
+        "422":
+          description: Unprocessable (user does not exist / invalid fields / incorrect password)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                userMissing:
+                  value: User does not exist.
+                invalidUserData:
+                  value: Invalid user data.
+                wrongPassword:
+                  value: Incorrect username or password.
+
+  /User/accessToken:
+    post:
+      tags: [User]
+      summary: Get new access token using RefreshToken cookie (rotates RefreshToken cookie)
+      responses:
+        "200":
+          description: OK
+          headers:
+            Set-Cookie:
+              description: RefreshToken cookie (rotated)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessfulLoginDTO"
+              examples:
+                ok:
+                  value:
+                    accessToken: eyJhbGciOi...
+        "401":
+          description: Unauthorized (missing/invalid refresh token or invalid session)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                missingCookie:
+                  value: Refresh token not found.
+                invalidToken:
+                  value: Invalid refresh token.
+        "422":
+          description: User not found.
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                userNotFound:
+                  value: User not found.
+
+  /User/logout:
+    post:
+      tags: [User]
+      summary: Logout (invalidates session and deletes RefreshToken cookie)
+      responses:
+        "200":
+          description: OK (empty body)
+        "401":
+          description: Unauthorized (missing/invalid refresh token)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                missingCookie:
+                  value: Refresh token not found.
+                invalidToken:
+                  value: Invalid refresh token.
+
+  /User/me:
+    get:
+      tags: [User]
+      summary: Get current user info (requires valid access token and valid RefreshToken session)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeDto"
+              examples:
+                ok:
+                  value:
+                    id: "user-id"
+                    userName: "admin"
+                    email: "admin@mail.com"
+                    roles: ["SysAdmin"]
+        "401":
+          description: Unauthorized (missing/invalid refresh token/session OR access token missing/invalid)
+          content:
+            text/plain:
+              schema:
+                type: string
+              examples:
+                missingCookie:
+                  value: Refresh token not found.
+                invalidRefresh:
+                  value: Invalid refresh token.
+                unauthorizedEmpty:
+                  value: Unauthorized
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            unauthorized:
+              value: Unauthorized
+    Forbidden:
+      description: Forbidden
+      content:
+        text/plain:
+          schema:
+            type: string
+          examples:
+            forbidden:
+              value: Forbidden
+
+  schemas:
+    # DTOs actually returned by controllers
+    ResponseFacultyDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+
+    ResponseGroupDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+        studyYear:
+          type: integer
+          format: int32
+        mentorId:
+          type: integer
+          format: int32
+
+    ResponseMentorDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+          nullable: true
+        surname:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        facultyId:
+          type: integer
+          format: int32
+        studyProgram:
+          type: string
+          nullable: true
+        studyYear:
+          type: integer
+          format: int32
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+
+    MeDto:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          nullable: true
+        userName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        roles:
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    SuccessfulLoginDTO:
+      type: object
+      additionalProperties: false
+      required: [accessToken]
+      properties:
+        accessToken:
+          type: string
+
+    # Request DTOs
+    CreateFacultyDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+
+    UpdateFacultyDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+
+    CreateGroupDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+        studyYear:
+          type: integer
+          format: int32
+        mentorId:
+          type: integer
+          format: int32
+
+    UpdateGroupDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+        studyYear:
+          type: integer
+          format: int32
+
+    CreateMentorDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        surname:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        facultyId:
+          type: integer
+          format: int32
+        studyProgram:
+          type: string
+          nullable: true
+        studyYear:
+          type: integer
+          format: int32
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+
+    UpdateMentorDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        surname:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phoneNumber:
+          type: string
+          nullable: true
+        facultyId:
+          type: integer
+          format: int32
+        studyProgram:
+          type: string
+          nullable: true
+        studyYear:
+          type: integer
+          format: int32
+        studyLevel:
+          $ref: "#/components/schemas/StudyLevel"
+
+    UserRegisterDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          nullable: true
+        surname:
+          type: string
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+
+    UserLoginDTO:
+      type: object
+      additionalProperties: false
+      properties:
+        username:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+
+    StudyLevel:
+      type: integer
+      format: int32
+      enum: [1, 2, 3]
+
+    IdentityCreateUserFailed:
+      type: object
+      additionalProperties: false
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [code, description]
+            properties:
+              code:
+                type: string
+              description:
+                type: string
